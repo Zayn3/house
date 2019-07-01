@@ -1,0 +1,95 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="easyUI/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="easyUI/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="easyUI/css/demo.css">
+	<script src="js/jquery-1.8.3.js"></script>
+	<!--jquery.easyui.min.js包含了easyUI中的所有插件-->
+	<script src="js/jquery.easyui.min.js"></script>
+</head>
+<script type="text/javascript">
+	//操作列
+    function opt_formatter(value,row,index) {
+        //异步提交
+        return "<a href='javascript:optIspass("+row.id+")'>取消审核</a>"
+    }
+    function ispass_formatter(value,row,index) {
+		return "审核通过"
+    }
+    //超链接审核
+	function optIspass(id) {
+     $.messager.confirm('提示框','是否取消审核?',function (boolean) {
+       if (boolean){
+           $.post('optHouseIspass',{"id":id,"ispass":0},function (data) {
+             if (data.result>0){
+                 $.messager.alert('提示','已取消审核','info');
+                 $("#data").datagrid("reload");
+			 } else {
+                 $.messager.alert('提示','系统繁忙','info');
+			 }
+           },'json')
+       }
+     })
+    }
+    //审核多行
+	function optIspassMore(){
+     $.messager.confirm('提示框','是否取消审核?',function (boolean) {
+         if (boolean) {
+             var selectRows = $("#data").datagrid("getSelections");
+             var ids = "";
+             for (var i = 0; i < selectRows.length; i++) {
+                 ids = ids + selectRows[i].id + ",";
+             }
+             ids = ids.substring(0, ids.length - 1);
+             //alert(ids)
+             $.post('optMoreHouseIspass', {"ids": ids,"ispass":0}, function (data) {
+                 if (data.result > 0) {
+                     $.messager.alert('提示', '取消了' + data.result + '行审核', 'info');
+                     $("#data").datagrid("reload");
+                 } else {
+                     $.messager.alert('提示', '系统繁忙', 'info');
+                 }
+             }, 'json')
+         }
+     })
+    }
+    //搜索用户
+	function search() {
+        var $telephone=$("#telephone").val();
+        var $username=$("#username").val();
+		$("#data").datagrid("load",{"telephone":$telephone,"username":$username});
+    }
+</script>
+<body>
+	<table id="data" title="审核取消出租房管理" class="easyui-datagrid"
+		url="selectAllIspassHouse?ispass=1" toolbar="#ToolBar" pagination="true"
+		fitColumns="true" fit="true" rownumbers="true">
+		<thead>
+			<tr>
+				<th field="cb" checkbox="true"></th>
+				<th field="id" width="10px">房屋编号</th>
+				<th field="title" width="10px">标题</th>
+				<th field="uname" width="10px">发布人</th>
+				<th field="price" width="10px">价格</th>
+				<th field="floorage" width="10px">面积</th>
+				<th field="dname" width="10px">区域</th>
+				<th field="sname" width="10px">街道</th>
+				<th field="tname" width="10px">类型</th>
+				<th field="status" width="10px" formatter="ispass_formatter">状态</th>
+				<th field="opt" width="10px" formatter="opt_formatter">操作</th>
+			</tr>
+		</thead>
+	</table>
+	
+	<div id="ToolBar">
+		电话:<input type="text" name="telephone" id="telephone">用户名<input type="text" name="username" id="username">
+		<a id="btn" href="javascript:search()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">easyui</a>
+		<div style="height: 40px;">
+			<a href="javascript:optIspassMore()" class="easyui-linkbutton"
+				iconCls="icon-ok" plain="true">批量取消审核</a>
+		</div>
+	</div>
+</body>
+</html>

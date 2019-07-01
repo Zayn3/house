@@ -1,0 +1,174 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="easyUI/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="easyUI/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="easyUI/css/demo.css">
+	<script src="js/jquery-1.8.3.js"></script>
+	<!--jquery.easyui.min.js包含了easyUI中的所有插件-->
+	<script src="js/jquery.easyui.min.js"></script>
+</head>
+<script type="text/javascript">
+	//操作列
+    function opt_formatter(value,row,index) {
+        //异步提交
+        return "<a href='javascript:delOneType("+row.id+")'>删除</a>"
+    }
+        //打开添加窗口
+        function Add() {
+            // alert("打开窗口");
+            $("#AddDialog").dialog("open").dialog('setTitle',"添加户型");
+        }
+
+        //关闭添加窗口
+        function CloseDialog(obj){
+            $("#"+obj).dialog("close");
+        }
+        //添加按钮
+	    function SaveDialog(){
+            $('#SaveDialogForm').form('submit', {
+                    url:'addType',
+            success:function(data){
+                var obj=$.parseJSON(data);
+                if (obj.result>0){
+                 $("#AddDialog").dialog("close");
+                 $("#data").datagrid("reload");
+                }else{
+                 $.messager.alert('提示','系统繁忙','info');
+				}
+            }
+        });
+        }
+        //打开修改窗口
+	    function Update() {
+            //判断选的行数
+            var selectRows = $("#data").datagrid("getSelections");
+            if (selectRows.length!=1){
+                $.messager.alert('提示','请选择一行','info');
+                return;
+			}
+            $("#UpDialog").dialog("open").dialog('setTitle',"修改类型");
+            $("#UpDialogForm").form('load',selectRows[0]);
+        }
+	    //修改按钮
+	    function UpDialog() {
+            $('#UpDialogForm').form('submit', {
+                url:'upType',
+                success:function(data){
+                    var obj=$.parseJSON(data);
+                    if (obj.result>0){
+                        $("#UpDialog").dialog("close");
+                        $("#data").datagrid("reload");
+                    }else{
+                        $.messager.alert('提示','系统繁忙','info');
+                    }
+                }
+            });
+        }
+    //超链接删除
+	function delOneType(id) {
+     $.messager.confirm('提示框','是否确认删除?',function (boolean) {
+       if (boolean){
+           $.post('delOneType',{"id":id},function (data) {
+             if (data.result>0){
+                 $.messager.alert('提示','删除成功','info');
+                 $("#data").datagrid("reload");
+			 } else {
+                 $.messager.alert('提示','系统繁忙','info');
+			 }
+           },'json')
+       }
+     })
+    }
+    //删除按钮删除多行
+	function DeleteMore(){
+     $.messager.confirm('提示框','是否确认删除?',function (boolean) {
+         if (boolean) {
+             var selectRows = $("#data").datagrid("getSelections");
+             var ids = "";
+             for (var i = 0; i < selectRows.length; i++) {
+                 ids = ids + selectRows[i].id + ",";
+             }
+             ids = ids.substring(0, ids.length - 1);
+             //alert(ids)
+             $.post('deleteMoreType', {"ids": ids}, function (data) {
+                 if (data.result > 0) {
+                     $.messager.alert('提示', '成功删除' + data.result + '行', 'info');
+                     $("#data").datagrid("reload");
+                 } else {
+                     $.messager.alert('提示', '系统繁忙', 'info');
+                 }
+             }, 'json')
+         }
+     })
+    }
+</script>
+<body>
+	<table id="data" title="类型信息" class="easyui-datagrid"
+		url="selectTypePage" toolbar="#ToolBar" pagination="true"
+		fitColumns="true" fit="true" rownumbers="true">
+		<thead>
+			<tr>
+				<th field="cb" checkbox="true"></th>
+				<th field="id" width="10px">类型编号</th>
+				<th field="name" width="10px">户型</th>
+				<th field="opt" width="10px" formatter="opt_formatter">操作</th>
+			</tr>
+		</thead>
+	</table>
+	
+	<div id="ToolBar">
+		<div style="height: 40px;">
+			<a href="javascript:Add()" class="easyui-linkbutton"
+				iconCls="icon-add" plain="true">添加</a> <a
+				href="javascript:Update()" class="easyui-linkbutton"
+				iconCls="icon-edit" plain="true">修改</a> <a
+				href="javascript:DeleteMore()" class="easyui-linkbutton"
+				iconCls="icon-remove" plain="true">删除</a>
+		</div>
+	</div>
+ <!--添加表单-->
+	<div id="AddDialog" class="easyui-dialog" buttons="#AddDialogButtons"
+		style="width: 280px; height: 250px; padding: 10px 20px;" closed="true">
+		<form id="SaveDialogForm" method="post">
+			<table>
+				<tr>
+					<td>类型:</td>
+					<td><input type="text" name="name"/></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<!--添加提交-->
+	<div id="AddDialogButtons">
+		<a href="javascript:SaveDialog()" class="easyui-linkbutton"
+			iconCls="icon-ok">保存</a>
+		<a href="javascript:CloseDialog('AddDialog')"
+			class="easyui-linkbutton" iconCls="icon-cancel">取消</a>
+	</div>
+<!--修改表单-->
+	<div id="UpDialog" class="easyui-dialog" buttons="#UpDialogButtons"
+		 style="width: 280px; height: 250px; padding: 10px 20px;" closed="true">
+		<form id="UpDialogForm" method="post">
+			<table>
+				<tr>
+					<td>编号:</td>
+					<td><input type="text" name="id" readonly/></td>
+				</tr>
+				<tr>
+					<td>类型:</td>
+					<td><input type="text" name="name"/></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+<!--修改提交-->
+	<div id="UpDialogButtons">
+		<a href="javascript:UpDialog()" class="easyui-linkbutton"
+		   iconCls="icon-ok">修改</a>
+		<a href="javascript:CloseDialog('UpDialog')"
+		   class="easyui-linkbutton" iconCls="icon-cancel">取消</a>
+	</div>
+</body>
+</html>
